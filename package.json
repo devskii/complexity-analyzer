@@ -1,0 +1,39 @@
+{
+  "name": "complexity-analyzer",
+  "displayName": "Complexity Analyzer (JS/TS)",
+  "version": "0.0.1",
+  "description": "Computes cyclomatic complexity of functions and highlights those with high levels",
+  "main": "./out/extension.js",
+  "contributes": {},
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters"
+  ],
+  "activationEvents": [
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescriptreact"
+  ],
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "publish": "vsce package --allow-missing-repository --pre-release --skip-license",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Spencer",
+  "publisher": "devskii",
+  "readme": "README.md",
+  "dependencies": {
+    "@types/vscode": "^1.85.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3.7.1"
+  }
+}
