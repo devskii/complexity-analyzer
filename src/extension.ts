@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as ts from "typescript";
 import ComplexityCodeLensProvider from "./ComplexityCodeLensProvider";
+import { findFunctions } from "./complexity";
 
 const diagnosticCollection = vscode.languages.createDiagnosticCollection();
 const outputChannel = vscode.window.createOutputChannel("Complexity Analyzer");
@@ -83,108 +84,26 @@ export function activate(context: vscode.ExtensionContext) {
     document: vscode.TextDocument
   ): vscode.Diagnostic[] {
     const diagnostics: vscode.Diagnostic[] = [];
-    const sourceFile = ts.createSourceFile(
-      document.fileName,
-      sourceCode,
-      ts.ScriptTarget.Latest,
-      true
-    );
+    const functions = findFunctions(sourceCode, document.fileName);
 
-    function visitNode(node: ts.Node) {
-      if (
-        ts.isFunctionDeclaration(node) ||
-        ts.isFunctionExpression(node) ||
-        ts.isArrowFunction(node) ||
-        ts.isMethodDeclaration(node)
-      ) {
-        const complexity = computeCyclomaticComplexity(node);
-        const functionName = getFunctionName(node) || "anonymous function";
-        outputChannel.appendLine(`cc=${complexity}: ${functionName}`);
+    for (const { name, complexity, node } of functions) {
+      outputChannel.appendLine(`cc=${complexity}: ${name}`);
 
-        if (complexity >= 9) {
-          const range = getFunctionNameRange(node, document);
+      if (complexity >= 9) {
+        const range = getFunctionNameRange(node, document);
 
-          if (range) {
-            const diagnostic: vscode.Diagnostic = {
-              range,
-              message: `Cyclomatic Complexity = ${complexity} (high)`,
-              severity: vscode.DiagnosticSeverity.Warning,
-            };
-            diagnostics.push(diagnostic);
-          }
+        if (range) {
+          const diagnostic: vscode.Diagnostic = {
+            range,
+            message: `Cyclomatic Complexity = ${complexity} (high)`,
+            severity: vscode.DiagnosticSeverity.Warning,
+          };
+          diagnostics.push(diagnostic);
         }
       }
-      ts.forEachChild(node, visitNode);
     }
 
-    ts.forEachChild(sourceFile, visitNode);
     return diagnostics;
-  }
-
-  function computeCyclomaticComplexity(node: ts.Node): number {
-    let complexity = 1;
-
-    function visit(node: ts.Node) {
-      if (
-        ts.isIfStatement(node) ||
-        ts.isForStatement(node) ||
-        ts.isForInStatement(node) ||
-        ts.isForOfStatement(node) ||
-        ts.isWhileStatement(node) ||
-        ts.isDoStatement(node) ||
-        ts.isCaseClause(node) ||
-        ts.isCatchClause(node) ||
-        ts.isOptionalChain(node) ||
-        ts.isNullishCoalesce(node)
-      ) {
-        complexity++;
-      } else if (ts.isBinaryExpression(node)) {
-        if (
-          node.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken ||
-          node.operatorToken.kind === ts.SyntaxKind.BarBarToken
-        ) {
-          complexity++;
-        }
-      } else if (
-        ts.isConditionalExpression(node) ||
-        ts.isSwitchStatement(node)
-      ) {
-        complexity++;
-      }
-      ts.forEachChild(node, visit);
-    }
-
-    if (
-      (ts.isFunctionDeclaration(node) ||
-        ts.isFunctionExpression(node) ||
-        ts.isArrowFunction(node) ||
-        ts.isMethodDeclaration(node)) &&
-      node.body
-    ) {
-      if (ts.isBlock(node.body)) {
-        ts.forEachChild(node.body, visit);
-      } else if (ts.isExpression(node.body)) {
-        visit(node.body);
-      }
-    }
-
-    return complexity;
-  }
-
-  function getFunctionName(node: ts.Node): string | undefined {
-    if (ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node)) {
-      return node.name?.getText();
-    } else if (ts.isFunctionExpression(node) || ts.isArrowFunction(node)) {
-      if (
-        node.parent &&
-        ts.isVariableDeclaration(node.parent) &&
-        node.parent.name
-      ) {
-        return node.parent.name.getText();
-      }
-    }
-
-    return undefined;
   }
 
   function getFunctionNameRange(

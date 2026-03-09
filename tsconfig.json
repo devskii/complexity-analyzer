@@ -8,5 +8,5 @@
     "strict": true,
     "lib": ["es2020"]
   },
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "src/**/*.test.ts", "vitest.config.ts"]
 }

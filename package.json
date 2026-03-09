@@ -22,7 +22,8 @@
     "publish": "vsce package --allow-missing-repository --pre-release --skip-license",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "Spencer",
@@ -34,6 +35,7 @@
     "typescript": "^5.8.2"
   },
   "devDependencies": {
-    "@vscode/vsce": "^3.7.1"
+    "@vscode/vsce": "^3.7.1",
+    "vitest": "^4.0.18"
   }
 }
